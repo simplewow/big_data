@@ -38,7 +38,7 @@ VI
 
 
 
-## 2.Install:
+## 2.Create:
 
 
 
@@ -703,35 +703,291 @@ awk ' { split($3,date,"-");\
 
 
 
+------
+
+------
+
+
+
+## 9.Right:
+
+
+
+**三位一体的概念:    用户 ， 资源  ，  权限**
+
+#操作系统的root和普通，，资源的管理和普通
 
 
 
 
 
+用户
+
+```bash
+#1,创建
+useradd use01
+passwd  use01
+useradd use01
+passwd  use01
+#服务器必须设置密码
+
+#2,切换
+su use01
+#root切不要密码
+
+#3,改组 
+groupadd useshare
+usermod -a -G useshare use01
+#user增加，组。
+
+#
+```
+
+
+
+资源
+
+```bash
+#资源所属组
+chown user:group  file  (不改可省略)
+```
+
+
+
+权限
+
+```bash
+#字符型和数字（421）
+	
+	#改完权限还没刷新	
+	#文件的，，x  可执行
+	#文件夹，，x  cd
+
+
+chmod [ugo][+-][rwx] directory/file
+
+chmod [数字] directory/file
+
+
+#当创建完目录，再创建文件时，默认文件是属于use01这个组的，
+	#一种方法可以选择修改权限就行 （因为一般人还不能进入这个目录）
+
+
+```
 
 
 
 
 
+------
+
+------
+
+
+
+## 10.Install
+
+src —->  rpm ——> yum
+
+### 1,src:
+
+#编译安装
+
+```
+#编译安装
+配置文件：Makefile
+编译，安装命令：make
+
+
+#案例：编译安装nginx。
+	下载源码
+	tar xf 解压  (撕，定位文件，用这两个就行了)
+	README
+		./configure --prefix=/path ：有错就按照要求改 创建Makefile
+		vi Makefile
+		make：(实际上读Makefile) 编译
+		make install (make 打开makefile 找install ) 
+
+#注意：
+	编译环境    
+	软件依赖
+	配置项
+```
+
+
+
+### 2,rpm:
+
+#包（要自己管理）  redhat packet manage
+
+```bash
+#安装
+rpm安装：一般i
+	-i filename
+	--prefix
+	
+rpm升级：
+	-Uvh  （v 打印）
+	-Fvh
+	
+rpm卸载: (包名 qa出来的)
+	-e PACKAGE_NAME
+
+```
+
+```
+#查询
+rpm -qa : 查询已经安装的所有包
+
+rpm -ql PACKAGE_NAME: 查询指定包安装后生成的文件列表
+
+pm -qf /path/to/somefile: 查询文件是由哪个rpm包安装生成的	（逆向）
+
+```
+
+
+
+```
+#例子  （JAVA 安装后有些环境变量
+
+-qa包(配合管道)  , -ql（有啥文件）
+
+有的释放有软连接，但是有的没有，要在 /etc/profile配置   （PATH）
+	#（（末行模式：! ls） 查看地址
+	export JAVA_HOME=/usr/java/jdk1.7.0_67
+	export PATH=$PATH : $JAVA_HOME/bin(：附加)
+	
+配置好，重置资源
+source file
+
+#装了有记录，，数据库记录
+#包安装：。。。缺点要自己下依赖
+```
+
+
+
+### 3,yum:
+
+#仓库
+
+
+
+#基本知识：
+
+```bash
+类似C / S    yum不同是计算在客户端自己算
+	仓库有包和元数据（packages  repodata） （/mnt  仓库在本地的地方） 
+	客户先下元数据，和本地自己算缺啥。
+
+#yum
+命令：
+	yum repolist     看仓库
+	yum clean all    清
+	yum makecache   清缓存
+	yum update
+查询：
+	yum list		包
+	yum search
+
+安装&卸载：
+	yum install 
+	remove|erase
+
+分组：
+#把包弄成组了   ”“引用当做一个整体  防止空格
+	yum grouplist
+	yum groupinstall
+	yum groupremove
+	yum groupupdate
+
+```
+
+
+
+#仓库变化：
+
+```
+#换仓库
+#cd  /etc/yum.repos.d/ (仓库信息在这，yum install会找这里)
+
+#1，epo国内源：
+http://mirrors.aliyun.com
+	centos-->help
+	before:yum install wget           ---一定要先下
+	......                            ---接下来按照help
+	
+#2，本地库：
+
+mount /dev/cdrom    /mnt  
+#先挂个本地库盘(例子为一个base库)，包不全，但是元数据写的全
+
+cd /etc/yum.repos.d/  
+mv  CentOS-Base  local.repo  
+#留这一个，改名，后缀别错
+
+Vi local.repo     
+	dgg(从光标到开头删) ,dG(从光标到结尾删) , dd（一行） , D（光标以后删到行尾）
+
+#留下并修改如下：
+
+	[local]     #repo id
+	Name=  		#repo name
+	baseurl=file:///mnt    （yum再找repodata,开启下载）
+	gpgcheck=0
+
+
+yum clean all
+yum makecache   
+	
+
+#3 集群仓库：
+#做服务器
+
+```
+
+
+
+例子：**中文显示，查看中文文档** (临时赋值)
+
+```
+yum 的 repo 变成aliyun  || 本地DVD
+
+yum grouplist
+yum groupinstall “Chinese Support“   
+#装中文
+
+echo $LANG
+	#en_US.UTF-8
+LANG=zh_CN.UTF-8
+#改中文
+
+#增加epel的repo仓库：
+	http://mirrors.aliyun.com        
+	epel>>>>>help
+	wget centos6.......
+
+yum clean all
+yum makecache
+
+yum search man-pages
+yum install man man-pages man-pages-zh-CN（epel仓库才有这个包）
+
+man bash
+
+#流程是先找 /etc/（这个仓库信息）, 这个会告诉你仓库在哪.
+```
+
+
+
+------
+
+------
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-## 3.Shell :
+## 11.Shell :
 
 
 
