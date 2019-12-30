@@ -90,7 +90,7 @@ MAC （网关） 一直变包在目标地址外面
 
 拿连接百度为例：也就是填满包的过程
 
-![packet](Load-balancing.assets/Cpacket.png)
+![packet](Load-balancing.assets/packet.png)
 
 
 
