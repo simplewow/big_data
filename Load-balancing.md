@@ -26,7 +26,7 @@ www.baidu.com IP:80 1212
 
 确认机制：[三次握手>>（传输数据）>>四次分手]
 
-![TCP](G:%5Cgit%5Cbig_data%5Csource%5CTCP.png)
+![TCP](Load-balancing.assets/TCP.png)
 
 
 
@@ -34,7 +34,7 @@ www.baidu.com IP:80 1212
 
 ​	–netstat –natp （用ip显示,all,tcp,process）
 
-![net](G:%5Cgit%5Cbig_data%5Csource%5Cnet.png)
+![net](Load-balancing.assets/net.png)
 
 自己的IP，以及所连的。
 
@@ -50,7 +50,7 @@ www.baidu.com IP:80 1212
 
 路由表：数据由配置文件 etc/ipconfig
 
-![route](G:%5Cgit%5Cbig_data%5Csource%5Croute.png)
+![route](Load-balancing.assets/route.png)
 
 ```
 IP和MASK余运算得到网络号。
@@ -90,7 +90,7 @@ MAC （网关） 一直变包在目标地址外面
 
 拿连接百度为例：也就是填满包的过程
 
-![packet](G:%5Cgit%5Cbig_data%5Csource%5Cpacket.png)
+![packet](Load-balancing.assets/Cpacket.png)
 
 
 
