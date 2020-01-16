@@ -710,3 +710,85 @@ vi local.repo 修改里面的baseurl，改向本地服务器的域名
 
 ```
 
+```
+1，安装Tomcat,(先JAVA)
+rpm -i jdk-7u67-linux-x64.rpm 
+vi /etc/profile
+	export JAVA_HOME=/usr/java/jdk1.7.0_67 (:! ls /usr/java)
+	export PATH=$PATH:$JAVA_HOME/bin
+. /etc/profile
+#jps  说明成功
+
+2，apache
+tar xf apache-tomcat-7.0.61.tar.gz
+cd  apache-tomcat-7.0.61
+cd wepapps/ROOT
+#tomcat 显示的地址
+
+cp index.jsp index.jps.bak
+#显示的主页
+vi index.jsp 
+	#dG 全删
+	随便写个静态：
+		from 32<br>session: <%=session.getId()%>
+				#换行 和 session
+
+cd ../../
+#上两层
+cd bin 
+./startup.sh
+#启动  默认8080端口
+
+3，ngnix配置
+#在192.168.18.31nginx服务器上
+upstream tom {
+	server 192.168.18.32:8080
+	server 192.168.18.33:8080
+}
+
+location /test1 {
+	proxy_pass http://tom/;
+	#访问了tom 上主页的界面
+}
+！ser
+#重新加载
+
+#访问，有效果，但是session会一直变（表象就是要一直登陆密码）
+4,手术
+
+
+#在192.168.18.31nginx服务器上
+
+yum -y install memcached
+memcached -d -m 128m -p 11211 -l 192.168.18.31 -u root -P /tmp/
+#启动，netstat -natp | grep 11211 查看
+
+#在两个RS服务器上，两个手术，session 放在了共享里面
+
+#先停了
+cd /apache-tomcat-7.0.61/bin
+./shutdown.sh
+cd /apache-tomcat-7.0.61
+1）配置
+cd conf/context.xml
+#在</Context>添加
+
+<Manager className="de.javakaffee.web.msm.MemcachedBackupSessionManager" 
+	memcachedNodes="n1:192.168.18.31:11211" 
+    sticky="false" 
+    lockingMode="auto"
+    sessionBackupAsync="false"
+	requestUriIgnorePattern=".*\.(ico|png|gif|jpg|css|js)$"
+    sessionBackupTimeout="1000" transcoderFactoryClass="de.javakaffee.web.msm.serializer.kryo.KryoTranscoderFactory" 
+/>
+
+2）jar 库(负载均衡课里面)
+cd /apache-tomcat-7.0.61/lib
+#放在这里。
+cd /apache-tomcat-7.0.61/bin
+./startup.sh
+
+#时间问题：
+如果时间不一致，Session小于S 过期了，会被拒绝，重新发、
+```
+
