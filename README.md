@@ -9,5 +9,5 @@ the note of bigdata
 
 目前：Linux, load-balancing, hadoop
 
-
+2020-2-10:目前已经先提停止了，在学习java
 
