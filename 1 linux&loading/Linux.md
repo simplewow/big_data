@@ -1,5 +1,3 @@
-# 								Linux
-
 
 
 
@@ -133,7 +131,7 @@ ls -l   =  ll
 
 
 
-### Structure:
+### 4.1 Structure:
 
 目录树结构：虽然底层分区不一样，但是再抽象一层，全给封装成统一结构的虚拟树结构。
 
@@ -178,7 +176,7 @@ ls -l   =  ll
 
 
 
-### Command:
+### 4.2 Command:
 
 ```bash
 df：显示磁盘使用情况
@@ -802,7 +800,8 @@ src —->  rpm ——> yum
 
 #案例：编译安装nginx。
 	下载源码
-	tar xf 解压  (撕，定位文件，用这两个就行了)
+	tar xf 解压  (撕，定位文件，用这两个就行了) 
+	tar -zxvf japan.tar.gz -C /tmp/
 	README
 		./configure --prefix=/path ：有错就按照要求改 创建Makefile
 		vi Makefile

@@ -7,7 +7,11 @@ the note of bigdata
 
 本项目分好几个模块
 
-目前：Linux, load-balancing, hadoop
+目前：
+
+1：Linux, load-balancing, 
+
+2：hadoop，hive
 
 
 
