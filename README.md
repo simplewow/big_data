@@ -13,5 +13,7 @@ the note of bigdata
 
 2：hadoop，hive
 
+2020-2-10:目前已经先提停止了，在学习java
 
+2020-3-8: java 马上学习完毕，开始更新大数据
 
