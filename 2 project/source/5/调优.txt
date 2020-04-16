@@ -1,0 +1,83 @@
+一、调优的目的
+	充分的利用机器的性能，更快的完成mr程序的计算任务。甚至是在有限的机器条件下，能够支持运行足够多的mr程序。
+二、调优的总体概述 （调优有服务器调优，和代码调优）
+	从mr程序的内部运行机制，我们可以了解到一个mr程序由mapper和reducer两个阶段组成，其中mapper阶段包括数据的读取、map处理以及写出操作(排序和合并/sort&merge)，而reducer阶段包含mapper输出数据的获取、数据合并(sort&merge)、reduce处理以及写出操作。那么在这七个子阶段中，能够进行较大力度的进行调优的就是map输出、reducer数据合并以及reducer个数这三个方面的调优操作。也就是说虽然性能调优包括cpu、内存、磁盘io以及网络这四个大方面，但是从mr程序的执行流程中，我们可以知道主要有调优的是内存、磁盘io以及网络。在mr程序中调优，主要考虑的就是减少网络传输和减少磁盘IO操作，故本次课程的mr调优主要包括服务器调优、代码调优、mapper调优、reducer调优以及runner调优这五个方面。
+三、服务器调优
+	服务器调优主要包括服务器参数调优和jvm调优。在本次项目中，由于我们使用hbase作为我们分析数据的原始数据存储表，所以对于hbase我们也需要进行一些调优操作。除了参数调优之外，和其他一般的java程序一样，还需要进行一些jvm调优。
+
+	hdfs调优
+	1. dfs.datanode.failed.volumes.tolerated: 允许发生磁盘错误的磁盘数量，默认为0，表示不允许datanode发生磁盘异常。当挂载多个磁盘的时候，可以修改该值。
+	2. dfs.replication: 复制因子，默认3
+	3. dfs.namenode.handler.count: namenode节点并发线程量，默认10
+	4. dfs.datanode.handler.count：datanode之间的并发线程量，默认10。
+	5. dfs.datanode.max.transfer.threads：datanode提供的数据流操作的并发线程量，默认4096。  （linux 的一个线程是1024个文件描述符）
+		一般将其设置为linux系统的文件句柄数的85%~90%之间，查看文件句柄数语句ulimit -a，修改vim /etc/security/limits.conf, 不能设置太大
+		文件末尾，添加
+			* soft nofile 65535
+			* hard nofile 65535
+			注意：句柄数不能够太大，可以设置为1000000以下的所有数值，一般不设置为-1。
+			异常处理：当设置句柄数较大的时候，重新登录可能出现unable load session的提示信息，这个时候采用单用户模式进行修改操作即可。
+				单用户模式：
+					启动的时候按'a'键，进入选择界面，然后按'e'键进入kernel修改界面，然后选择第二行'kernel...'，按'e'键进行修改，在最后添加空格+single即可，按回车键回到修改界面，最后按'b'键进行单用户模式启动，当启动成功后，还原文件后保存，最后退出(exit)重启系统即可。
+	6. io.file.buffer.size: 读取/写出数据的buffer大小，默认4096，一般不用设置，推荐设置为4096的整数倍(物理页面的整数倍大小，，4K 文件一块一块的)。
+
+------------------------------------------------------------------
+
+	hbase调优
+	1. 设置regionserver的内存大小，默认为1g，推荐设置为4g。
+		修改conf/hbase-env.sh中的HBASE_HEAPSIZE=4g
+	2. hbase.regionserver.handler.count: 修改客户端并发线程数，默认为10。设置规则为，当put和scans操作比较的多的时候，将其设置为比较小的值；当get和delete操作比较多的时候，将其设置为比较大的值。原因是防止频繁GC操作导致内存异常。
+	3. 自定义hbase的分割和紧缩操作，默认情况下hbase的分割机制是当region大小达到hbase.hregion.max.filesize(10g)的时候进行自动分割，推荐每个regionserver的region个数在20~500个为最佳。hbase的紧缩机制是hbase的一个非常重要的管理机制，hbase的紧缩操作是非常消耗内存和cpu的，所以一般机器压力比较大的话，推荐将其关闭，改为手动控制。
+	4. hbase.balancer.period： 设置hbase的负载均衡时间，默认为300000(5分钟)，在负载比较高的集群上，将其值可以适当的改大。
+	5. hfile.block.cache.size：修改hflie文件块在内存的占比，默认0.4。在读应用比较多的系统中，可以适当的增大该值，在写应用比较多的系统中，可以适当的减少该值，不过不推荐修改为0。
+	6. hbase.regionserver.global.memstore.upperLimit：修改memstore的内存占用比率上限，默认0.4，当达到该值的时候，会进行flush操作将内容写的磁盘中。
+	7. hbase.regionserver.global.memstore.lowerLimit: 修改memstore的内存占用比率下限，默认0.38，进行flush操作后，memstore占用的内存比率必须不大于该值。
+	8. hbase.hregion.memstore.flush.size: 当memstore的值大于该值的时候，进行flush操作。默认134217728(128M)。
+	9. hbase.hregion.memstore.block.multiplier: 修改memstore阻塞块大小比率值，默认为4。也就是说在memstore的大小超过4*hbase.hregion.memstore.flush.size的时候就会触发写阻塞操作。最终可能会导致出现oom异常。
+
+-----------------------------------------------------------------
+	
+	mapreduce调优
+	1. mapreduce.task.io.sort.factor: mr程序进行合并排序的时候，打开的文件数量，默认为10个.
+	2. mapreduce.task.io.sort.mb: mr程序进行合并排序操作的时候或者mapper写数据的时候，内存大小，默认100M
+	3. mapreduce.map.sort.spill.percent： mr程序进行flush操作的阀值，默认0.80。
+	4. mapreduce.reduce.shuffle.parallelcopies：mr程序reducer copy数据的线程数，默认5。  （拉取数据）
+	5. mapreduce.reduce.shuffle.input.buffer.percent: reduce复制map数据的时候指定的内存堆大小百分比，默认为0.70，适当的增加该值可以减少map数据的磁盘溢出，能够提高系统性能。
+	6. mapreduce.reduce.shuffle.merge.percent：reduce进行shuffle的时候，用于启动合并输出和磁盘溢写的过程的阀值，默认为0.66。如果允许，适当增大其比例能够减少磁盘溢写次数，提高系统性能。同mapreduce.reduce.shuffle.input.buffer.percent一起使用。
+	7. mapreduce.task.timeout：mr程序的task执行情况汇报过期时间，默认600000(10分钟)，设置为0表示不进行该值的判断。
+	
+四、代码调优
+#例jdbc ： 没人用，换了。
+	代码调优，主要是mapper和reducer中，针对多次创建的对象，进行代码提出操作。这个和一般的java程序的代码调优一样。
+五、mapper调优
+	mapper调优主要就是就一个目标：减少输出量。我们可以通过增加combine阶段以及对输出进行压缩设置进行mapper调优。
+	combine介绍：
+		实现自定义combine要求继承reducer类，特点：
+		以map的输出key/value键值对作为输入输出键值对，作用是减少网络输出，在map节点上就合并一部分数据。
+		比较适合，map的输出是数值型的，方便进行统计。
+	压缩设置：
+		在提交job的时候分别设置启动压缩和指定压缩方式。
+六、reducer调优
+	reducer调优主要是通过参数调优和设置reducer的个数来完成。
+	reducer个数调优：
+		要求：一个reducer和多个reducer的执行结果一致，不能因为多个reducer导致执行结果异常。
+		规则：一般要求在hadoop集群中的执行mr程序，map执行完成100%后，尽量早的看到reducer执行到33%，可以通过命令hadoop job -list  (hadoop job -kill XX)或者web页面来查看。
+			原因： map的执行process数是通过inputformat返回recordread来定义的；而reducer是有三部分构成的，分别为读取mapper输出数据、合并所有输出数据以及reduce处理，其中第一步要依赖map的执行，所以在数据量比较大的情况下，一个reducer无法满足性能要求的情况下，我们可以通过调高reducer的个数来解决该问题。
+		优点：充分利用集群的优势。
+		缺点：有些mr程序没法利用多reducer的优点，比如获取top n的mr程序。
+七、runner调优  (JVM)调优
+	runner调优其实就是在提交job的时候设置job参数，一般都可以通过代码  和xml文件两种方式进行设置。
+	1~8详见ActiveUserRunner(before和configure方法)，9详解TransformerBaseRunner(initScans方法)
+
+	1. mapred.child.java.opts: 修改childyard进程执行的jvm参数，针对map和reducer均有效，默认：-Xmx200m   
+	2. mapreduce.map.java.opts： 需改map阶段的childyard进程执行jvm参数，默认为空，当为空的时候，使用mapred.child.java.opts。
+	3. mapreduce.reduce.java.opts：修改reducer阶段的childyard进程执行jvm参数，默认为空，当为空的时候，使用mapred.child.java.opts。
+	4. mapreduce.job.reduces： 修改reducer的个数，默认为1。可以通过job.setNumReduceTasks方法来进行更改。
+	5. mapreduce.map.speculative：是否启动map阶段的推测执行，默认为true。其实一般情况设置为false比较好。可通过方法job.setMapSpeculativeExecution来设置。
+	6. mapreduce.reduce.speculative：是否需要启动reduce阶段的推测执行，默认为true，其实一般情况设置为fase比较好。可通过方法job.setReduceSpeculativeExecution来设置。
+	7. mapreduce.map.output.compress：设置是否启动map输出的压缩机制，默认为false。在需要减少网络传输的时候，可以设置为true。
+	8. mapreduce.map.output.compress.codec：设置map输出压缩机制，默认为org.apache.hadoop.io.compress.DefaultCodec，推荐使用SnappyCodec(在之前版本中需要进行安装操作，现在版本不太清楚，安装参数：http://www.cnblogs.com/chengxin1982/p/3862309.html)
+	9. hbase参数设置
+		由于hbase默认是一条一条数据拿取的，在mapper节点上执行的时候是每处理一条数据后就从hbase中获取下一条数据，通过设置cache值可以一次获取多条数据，减少网络数据传输。
+
+

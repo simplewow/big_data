@@ -1,0 +1,33 @@
+Mapreduce运行3种方式
+本地方式运行：
+pc环境
+1.1、将 Hadoop安装本地解压
+1.2、配置 Hadoop的环境变量
+添加%HADOOP_HOME%
+修改%PATH%添加%HADOOP_HOME%/bin;%HADOOP_HOME%/sbin
+3、在解压的 Hadoop的bin目录下添加 winutils.exe工具
+Java工程
+2.1、jdk一定要使用自己的jdk、不要使用 eclipse自带
+2.2、根目录(src目录下：加入org那个包)，不要添加任何 Mapreduce的配置文件hdfs-site.xml yarn-site.xml core-site.xml mapred-site.xml
+2.3、在代码当中，通过conf.set方式来进行指定。conf set("fs.defaults","hdfs://nodel:8020");
+2.4、修改 Hadoop源码
+3、右键run执行
+
+集群运行两种方式
+Java工程
+1、根目录(Src目录下)，添加 Hadoop的配置文件hdfs-site.xm1 yarn-Site.xm1 core-site.xm1 mapped-site.xm1
+2、在代码当中，指定jar包的位置， config.set(" mapped.jar"，"D:\\WR\wc.jar")；
+3、修改 Hadoop源码
+4、将工程打jar包
+5、右键run执行
+
+Java工程
+根目录(src目录下)，添加 Hadoop的配置文件hdfs-site.xm1 yarn-Site.xm1 core-site.xm1 mapped-site.xm1
+2、将工程打jar包
+手动将jar包上传到集群当中
+4、通过 hadoop命令来运行。 hadoop jar jar位置mr代码入口(例如： hadoop jar/usr/wc.Jar com.sxt.mr.Wcjob)
+在代码当中指定 Hbase所使用的 Zookeeper集群
+
+(注意：如果 hbase搭建的是仍分布式，那么对应的 Zookeeper就是那台伪分布式的服务器
+conf.set("hbase.zookeeper.quorum","nodel, node 2, node3")
+System.setproperty("HADOOP_USER_NAME,"root");

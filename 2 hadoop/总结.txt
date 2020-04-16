@@ -1,0 +1,22 @@
+资源都在目录 source/总结 下面
+​	复习.txt
+​	hadoop.pdf
+​	hive.pdf
+​	hbase.pdf
+
+
+其他知识：
+SQL 执行顺序：
+(8) SELECT (9)DISTINCT<Select_list>
+(1) FROM <left_table> (3) <join_type>JOIN<right_table>
+(2) ON<join_condition>
+(4) WHERE<where_condition>
+(5) GROUP BY<group_by_list>
+(6) WITH {CUBE|ROLLUP}
+(7) HAVING<having_condtion>
+(10) ORDER BY<order_by_list>
+(11) LIMIT<limit_number>
+
+
+having  
+#HAVING筛选器是唯一一个用来筛选组的筛选器

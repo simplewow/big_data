@@ -1,0 +1,25 @@
+大数据思想：
+	分布式存储
+	分而治之：
+		计算向数据移动（数据计算本地化：本地执行任务，然后结果返回）
+		分布式并行计算  （任务同时跑）
+
+hadoop
+	hdfs
+	mapreduce
+hive
+hbase
+
+
+数据存储：	hdfs    hbase    hdfs  :  遍历慢，，，，hbase：顺序存磁盘，，取得快
+硬件环境：	linux(centos redhet unbuntu)		内核数 内存 网卡带宽
+
+
+计算(compute)
+数据分析：	mapreduce，，，， hive
+
+
+大数据基于什么样的计算场景
+1、数据量海量	（GB,TB,PB）
+2、文件记录数	（百万级别以上）
+3、时效型		（实时业务：毫秒级，秒级相应		离线业务：分钟，小时）

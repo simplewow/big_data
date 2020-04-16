@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<!-- saved from url=(0038)https://www.douban.com/note/208430424/ -->
+<html lang="zh-cmn-Hans" class="ua-windows ua-webkit"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style class="vjs-styles-defaults">
+      .video-js {
+        width: 300px;
+        height: 150px;
+      }
+
+      .vjs-fluid {
+        padding-top: 56.25%
+      }
+    </style>
+    
+    <meta name="renderer" content="webkit">
+    <meta name="referrer" content="always">
+    <title>
+    Zookeeper全解析——Paxos作为灵魂
+</title>
+    
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="Sun, 6 Mar 2005 01:00:00 GMT">
+    
+    <script type="text/javascript" defer="" async="" src="./Zookeeper全解析——Paxos作为灵魂_files/piwik.js.下载"></script><script async="" src="./Zookeeper全解析——Paxos作为灵魂_files/gtm.js.下载"></script><script type="text/javascript" src="./Zookeeper全解析——Paxos作为灵魂_files/ad.release.js.下载" async="true"></script><script type="text/javascript" src="./Zookeeper全解析——Paxos作为灵魂_files/render_gif.js.下载" async="true"></script><script>var _head_start = new Date();</script>
+    <script src="./Zookeeper全解析——Paxos作为灵魂_files/jquery.min.js.下载"></script>
+    <script src="./Zookeeper全解析——Paxos作为灵魂_files/douban.js.下载"></script>
+    <link href="./Zookeeper全解析——Paxos作为灵魂_files/douban.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+    
+        
+    .ui-tooltip {
+      width: 270px;
+    }
+    .note {
+      margin-bottom: 20px;
+    }
+    .note img {
+      max-width:590px;
+    }
+    .mod-tags {
+      margin-bottom: 20px;
+    }
+    .tabs{font-size:0;letter-spacing:-0.31em;*letter-spacing:normal;word-spacing:-0.43em}.tabs a{display:inline-block;*display:inline;zoom:1;padding:1px 8px;margin-right:5px}.tabs a:link,.tabs a:visited,.tabs a:hover,.tabs a:active{font-size:13px;line-height:1.2;letter-spacing:normal;word-spacing:normal}.tabs a:hover,.tabs a:active{-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px}.tabs a.on:link,.tabs a.on:visited,.tabs a.on:hover,.tabs a.on:active{color:#fff;background:#83bf73;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px}.tabs{margin:40px 0 10px;padding-bottom:8px;border-bottom:1px solid #e6e6e6}.tabs a:first-child{padding-left:0}.tabs a:link,.tabs a:visited,.tabs a:hover,.tabs a:active{font-size:14px;color:#37a;background:none}.tabs a.on:link,.tabs a.on:visited,.tabs a.on:hover,.tabs a.on:active{color:#000;background:none}.list,.list .content{overflow:hidden;zoom:1}.list .pic{float:left;margin-right:12px}.list p{margin:8px 0 0 0;background:#f9f9f9;padding:8px}.list .pubtime{position:absolute;top:10px;right:0;color:#999}.list .pic img{width:24px;height:24px}.list ul{margin-top:-15px}.list li{position:relative;padding-top:10px;margin-top:10px;border-top:1px dashed #e6e6e6;overflow:hidden;color:#666}.topic-fav-list .content{margin-top:4px;width:70%}.topic-fav-list .pubtime{top:14px}.topic-rec-list .pubtime a:link,.topic-rec-list .pubtime a:visited,.topic-fav-list .pubtime a:link,.topic-fav-list .pubtime a:visited,.topic-donate-list .pubtime a:link,.topic-donate-list .pubtime a:visited{color:#666}.topic-rec-list .pubtime a:hover,.topic-rec-list .pubtime a:active,.topic-fav-list .pubtime a:hover,.topic-fav-list .pubtime a:active,.topic-donate-list .pubtime a:hover,.topic-donate-list .pubtime a:active{color:#fff}.topic-rec-list p{padding:0}.topic-rec-list p a{display:block;background:#f9f9f9;padding:8px}.topic-rec-list p a:link,.topic-rec-list p a:visited{color:#666}.topic-rec-list p a:hover,.topic-rec-list p a:active{background-color:#f6f6f6;color:#666}.donation-total{padding:7px 0 15px;line-height:1;border-bottom:1px dashed #e6e6e6;color:#666}.donation-total+.list ul{margin-top:-11px}
+
+    .copyright-claim.repost {
+      color: #999;
+      font-size: 13px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .copyright-claim.repost .rating_helper_wrap {
+      display: none;
+      position: absolute;
+      margin-top: -2px;
+    }
+    .copyright-claim.repost:hover .rating_helper_wrap {
+      display: inline-block;
+    }
+    .copyright-claim.repost .rating_helper_wrap a {
+      background: none;
+    }
+    .copyright-claim.repost .rating_helper_wrap .rating_helper_content {
+      width: 235px;
+    }
+    #link-report_note .report a {
+      font-size: 13px;
+      visibility: visible;
+    }
+    #link-report_note .report {
+      float: right;
+      white-space: normal;
+    }
+    #link-report_note {
+      overflow: hidden;
+    }
+    .via {
+      float: left;
+      font-size: 13px;
+      color: #bbb;
+    }
+    .via a {
+      color: #bbb;
+      font-size: 13px;
+    }
+    .via a:hover {
+      color: #fff;
+    }
+    #dale_personal_note_bottom_super_banner {
+      padding-top: 20px;
+    }
+    .video-player {
+        margin: 10px 0;
+        text-align: center;
+    }
+    .video-title {
+        color: #999;
+    }
+    .comment-item .comment-report { position: static !important; display: inline-block; }
+    .comment-item .op-lnks > a { margin-right: 10px; }
+
+    </style>
+    
+    <link rel="stylesheet" media="only print" href="./Zookeeper全解析——Paxos作为灵魂_files/print.css">
+    <meta name="mobile-agent" content="format=html5; url=https://m.douban.com/note/208430424">
+    <meta property="og:title" content="Zookeeper全解析——Paxos作为灵魂">
+    <meta property="og:site_name" content="豆瓣">
+    <meta property="og:url" content="https://www.douban.com/note/208430424/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="原计划在介绍完ZK Client之后就着手ZK Server的介绍，但是发现ZK Server所包含的内容实在太多，并不是简简单单一篇Blog就能搞定的。于是决定从基础搞起比较好。 那么ZK Server最基础的东西是什么呢？我想应该是Pa...">
+    <link type="text/css" href="./Zookeeper全解析——Paxos作为灵魂_files/jquery.ui.tooltip.css" rel="stylesheet">
+    <link type="text/css" href="./Zookeeper全解析——Paxos作为灵魂_files/tooltip.css" rel="stylesheet">
+    <link type="text/css" href="./Zookeeper全解析——Paxos作为灵魂_files/tag.css" rel="stylesheet">
+    <script type="text/javascript" src="./Zookeeper全解析——Paxos作为灵魂_files/do.js.下载" data-cfg-autoload="false"></script>
+    <script type="text/javascript" src="./Zookeeper全解析——Paxos作为灵魂_files/jquery.ui.min.js.下载"></script>
+    <script type="text/javascript" src="./Zookeeper全解析——Paxos作为灵魂_files/jquery.ui.tooltip.js.下载"></script>
+    <style>
+      .note .cc table, .note .ll table, .note .rr table { width: auto }
+    </style>
+
+    <link rel="stylesheet" href="./Zookeeper全解析——Paxos作为灵魂_files/638041789dbecffc.css">
+    <script></script>
+
+    <link rel="shortcut icon" href="https://img3.doubanio.com/favicon.ico" type="image/x-icon">
+<style type="text/css">.dou-preview-image-zoom-in{cursor:zoom-in}.dou-preview-image-link-open{position:fixed;z-index:12;width:14px;height:14px}.dou-preview-image-link-open:link,.dou-preview-image-link-open:visited{background:transparent url("data:image/svg+xml;charset=utf-8,%3Csvg width='14' height='14' viewBox='-1 -1 15 15' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.05 0H1.613S1.144.035.796.41C.447.782.454 1.3.454 1.3L.417 11.815s.014.502.33.843c.316.342.747.342.747.342h10.28s.484-.043.748-.417c.264-.373.256-.823.256-.823V8.848m-7.883-.736L12.634.134M7.8 0h4.91v4.867' stroke='%23aaa' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E") no-repeat;opacity:.6}.dou-preview-image-link-open:active,.dou-preview-image-link-open:hover{opacity:1;background-color:transparent}.dou-preview-image-popup{position:absolute;z-index:10;top:0;height:400px;left:0;right:0;background-color:#fff}.dou-preview-image-popup-image{position:absolute;z-index:11;cursor:zoom-out}</style><script src="./Zookeeper全解析——Paxos作为灵魂_files/ga.js.下载" async="true"></script></head>
+
+<body><div class="ui-overlay-anchor" style="margin-top: 0px; display: none;"></div>
+  
+  
+    <script type="text/javascript">var _body_start = new Date();</script>
+    
+  
+
+
+
+    <link href="./Zookeeper全解析——Paxos作为灵魂_files/bundle.css" rel="stylesheet" type="text/css">
+
+
+
+<div id="db-global-nav" class="global-nav">
+  <div class="bd">
+    
+<div class="top-nav-info">
+  <a href="https://www.douban.com/accounts/login?source=main" class="nav-login" rel="nofollow">登录</a>
+  <a href="https://www.douban.com/accounts/register?source=main" class="nav-register" rel="nofollow">注册</a>
+</div>
+
+
+    
+<div class="top-nav-doubanapp">
+  <a href="https://www.douban.com/doubanapp/app?channel=top-nav" class="lnk-doubanapp">下载豆瓣客户端</a>
+  <div id="top-nav-appintro" class="more-items">
+    <p class="appintro-title">豆瓣</p>
+    <p class="slogan">我们的精神角落</p>
+    <p class="qrcode">扫码直接下载</p>
+    <div class="download">
+      <a href="https://www.douban.com/doubanapp/redirect?channel=top-nav&amp;direct_dl=1&amp;download=iOS">iPhone</a>
+      <span>·</span>
+      <a href="https://www.douban.com/doubanapp/redirect?channel=top-nav&amp;direct_dl=1&amp;download=Android" class="download-android">Android</a>
+    </div>
+    <div id="doubanapp-tip" style="display: block;">
+      <a href="https://www.douban.com/doubanapp/app?channel=qipao" class="tip-link">豆瓣 5.0 全新发布</a>
+      <a href="javascript: void 0;" class="tip-close">×</a>
+    </div>
+  </div>
+</div>
+
+    
+
+
+<div class="global-nav-items">
+  <ul>
+    <li class="on">
+      <a href="https://www.douban.com/" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-main&quot;,&quot;uid&quot;:&quot;0&quot;}">豆瓣</a>
+    </li>
+    <li class="">
+      <a href="https://book.douban.com/" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-book&quot;,&quot;uid&quot;:&quot;0&quot;}">读书</a>
+    </li>
+    <li class="">
+      <a href="https://movie.douban.com/" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-movie&quot;,&quot;uid&quot;:&quot;0&quot;}">电影</a>
+    </li>
+    <li class="">
+      <a href="https://music.douban.com/" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-music&quot;,&quot;uid&quot;:&quot;0&quot;}">音乐</a>
+    </li>
+    <li class="">
+      <a href="https://www.douban.com/location" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-location&quot;,&quot;uid&quot;:&quot;0&quot;}">同城</a>
+    </li>
+    <li class="">
+      <a href="https://www.douban.com/group" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-group&quot;,&quot;uid&quot;:&quot;0&quot;}">小组</a>
+    </li>
+    <li class="">
+      <a href="https://read.douban.com/?dcs=top-nav&amp;dcm=douban" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-read&quot;,&quot;uid&quot;:&quot;0&quot;}">阅读</a>
+    </li>
+    <li class="">
+      <a href="https://douban.fm/?from_=shire_top_nav" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-fm&quot;,&quot;uid&quot;:&quot;0&quot;}">FM</a>
+    </li>
+    <li class="">
+      <a href="https://time.douban.com/?dt_time_source=douban-web_top_nav" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-time&quot;,&quot;uid&quot;:&quot;0&quot;}">时间</a>
+    </li>
+    <li class="">
+      <a href="https://market.douban.com/?utm_campaign=douban_top_nav&amp;utm_source=douban&amp;utm_medium=pc_web" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-market&quot;,&quot;uid&quot;:&quot;0&quot;}">市集</a>
+    </li>
+    <li>
+      <a href="https://www.douban.com/note/208430424/#more" class="bn-more"><span>更多</span></a>
+      <div class="more-items">
+        <table cellpadding="0" cellspacing="0">
+          <tbody>
+            <tr>
+              <td>
+                <a href="https://ypy.douban.com/" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-ypy&quot;,&quot;uid&quot;:&quot;0&quot;}">豆瓣摄影</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </li>
+  </ul>
+</div>
+
+  </div>
+</div>
+<script>
+  ;window._GLOBAL_NAV = {
+    DOUBAN_URL: "https://www.douban.com",
+    N_NEW_NOTIS: 0,
+    N_NEW_DOUMAIL: 0
+  };
+</script>
+
+
+
+    <script src="./Zookeeper全解析——Paxos作为灵魂_files/bundle.js.下载" defer="defer"></script>
+
+
+
+
+  
+
+
+
+    <link href="./Zookeeper全解析——Paxos作为灵魂_files/bundle(1).css" rel="stylesheet" type="text/css">
+
+
+
+<div id="db-nav-sns" class="nav">
+  <div class="nav-wrap">
+    <div class="nav-primary">
+     
+      <div class="nav-logo">
+        <a href="https://www.douban.com/">豆瓣社区</a>
+      </div>
+
+      <div class="nav-search">
+  <form action="https://www.douban.com/search" method="get">
+	<fieldset>
+      <legend>搜索：</legend>
+	  <label for="inp-query" style="display: none;">搜索你感兴趣的内容和人...</label>
+	  <div class="inp">
+	    <input type="hidden" name="source" value="suggest">
+		<input id="inp-query" name="q" size="22" maxlength="60" autocomplete="off" value="" placeholder="搜索你感兴趣的内容和人...">
+	  </div>
+	  <div class="inp-btn"><input type="submit" value="搜索"></div>
+	</fieldset>
+  </form>
+</div>
+
+      
+
+<div class="nav-items">
+  <ul>
+    <li><a href="https://www.douban.com/">首页</a></li>
+      <li>
+        <a href="https://www.douban.com/explore">
+          浏览发现
+        </a>
+      </li>
+      <li>
+        <a href="https://www.douban.com/gallery">
+          话题广场
+          <img src="./Zookeeper全解析——Paxos作为灵魂_files/new_menu.gif" alt="new" style="position: absolute; top: -7px; right: -13px;">
+        </a>
+      </li>
+  </ul>
+</div>
+
+    </div>
+  </div>
+</div>
+
+
+
+    <script src="./Zookeeper全解析——Paxos作为灵魂_files/bundle.js(1).下载" defer="defer"></script>
+
+
+
+
+
+    <div id="wrapper">
+        
+
+        
+<div id="content">
+    
+
+    <div class="grid-16-8 clearfix">
+        
+        
+        <div class="article">
+               
+    
+    
+    
+    <div id="reg-up">
+        <a href="https://www.douban.com/accounts/register" data-source="note" data-key="regpop" data-cookie="1" data-expired="3600000" data-width="478" data-height="480" class="btn-reg lnk-show-reg">快速注册</a>
+    </div>
+    
+    
+    
+    <div id="note-208430424" class="note-container" data-url="https://www.douban.com/note/208430424/" data-author="摩萨德" data-is-original="0">
+
+    
+    
+    
+
+    
+
+        <div class="note-header note-header-container">
+        <h1>Zookeeper全解析——Paxos作为灵魂</h1>
+
+    
+    <div>
+        <a href="https://www.douban.com/people/twogood/"><img class="note_author_avatar" width="24" height="24" src="./Zookeeper全解析——Paxos作为灵魂_files/u3239388-10.jpg" alt="摩萨德"></a>
+        <a href="https://www.douban.com/people/twogood/" class="note-author">摩萨德</a>
+        <span class="pub-date">2012-04-05 23:42:18</span>
+    </div>
+    </div>
+
+
+    
+    <div class="note" id="note_208430424_short" style="display:none;"></div>
+    <div id="note_208430424_full">
+            
+            <div class="note" id="link-report">原计划在介绍完ZK Client之后就着手ZK Server的介绍，但是发现ZK Server所包含的内容实在太多，并不是简简单单一篇Blog就能搞定的。于是决定从基础搞起比较好。<br><br>那么ZK Server最基础的东西是什么呢？我想应该是Paxos了。所以本文会介绍Paxos以及它在ZK Server中对应的实现。<br><br>先说Paxos，它是一个基于消息传递的一致性算法，Leslie Lamport在1990年提出，近几年被广泛应用于分布式计算中，Google的Chubby，Apache的Zookeeper都是基于它的理论来实现的，Paxos还被认为是到目前为止唯一的分布式一致性算法，其它的算法都是Paxos的改进或简化。有个问题要提一下，Paxos有一个前提：没有拜占庭将军问题。就是说Paxos只有在一个可信的计算环境中才能成立，这个环境是不会被入侵所破坏的。<br><br>关于Paxos的具体描述可以在Wiki中找到：<a rel="nofollow" href="http://zh.wikipedia.org/zh-cn/Paxos" target="_blank">http://zh.wikipedia.org/zh-cn/Paxos</a>算法。网上关于Paxos分析的文章也很多。这里希望用最简单的方式加以描述并建立起Paxos和ZK Server的对应关系。<br><br>Paxos描述了这样一个场景，有一个叫做Paxos的小岛(Island)上面住了一批居民，岛上面所有的事情由一些特殊的人决定，他们叫做议员(Senator)。议员的总数(Senator Count)是确定的，不能更改。岛上每次环境事务的变更都需要通过一个提议(Proposal)，每个提议都有一个编号(PID)，这个编号是一直增长的，不能倒退。每个提议都需要超过半数((Senator Count)/2 +1)的议员同意才能生效。每个议员只会同意大于当前编号的提议，包括已生效的和未生效的。如果议员收到小于等于当前编号的提议，他会拒绝，并告知对方：你的提议已经有人提过了。这里的当前编号是每个议员在自己记事本上面记录的编号，他不断更新这个编号。整个议会不能保证所有议员记事本上的编号总是相同的。现在议会有一个目标：保证所有的议员对于提议都能达成一致的看法。<br><br>好，现在议会开始运作，所有议员一开始记事本上面记录的编号都是0。有一个议员发了一个提议：将电费设定为1元/度。他首先看了一下记事本，嗯，当前提议编号是0，那么我的这个提议的编号就是1，于是他给所有议员发消息：1号提议，设定电费1元/度。其他议员收到消息以后查了一下记事本，哦，当前提议编号是0，这个提议可接受，于是他记录下这个提议并回复：我接受你的1号提议，同时他在记事本上记录：当前提议编号为1。发起提议的议员收到了超过半数的回复，立即给所有人发通知：1号提议生效！收到的议员会修改他的记事本，将1好提议由记录改成正式的法令，当有人问他电费为多少时，他会查看法令并告诉对方：1元/度。<br><br>现在看冲突的解决：假设总共有三个议员S1-S3，S1和S2同时发起了一个提议:1号提议，设定电费。S1想设为1元/度, S2想设为2元/度。结果S3先收到了S1的提议，于是他做了和前面同样的操作。紧接着他又收到了S2的提议，结果他一查记事本，咦，这个提议的编号小于等于我的当前编号1，于是他拒绝了这个提议：对不起，这个提议先前提过了。于是S2的提议被拒绝，S1正式发布了提议: 1号提议生效。S2向S1或者S3打听并更新了1号法令的内容，然后他可以选择继续发起2号提议。<br><br>好，我觉得Paxos的精华就这么多内容。现在让我们来对号入座，看看在ZK Server里面Paxos是如何得以贯彻实施的。<br><br>小岛(Island)——ZK Server Cluster<br><br>议员(Senator)——ZK Server<br><br>提议(Proposal)——ZNode Change(Create/Delete/SetData…)<br><br>提议编号(PID)——Zxid(ZooKeeper Transaction Id)<br><br>正式法令——所有ZNode及其数据<br><br>貌似关键的概念都能一一对应上，但是等一下，Paxos岛上的议员应该是人人平等的吧，而ZK Server好像有一个Leader的概念。没错，其实Leader的概念也应该属于Paxos范畴的。如果议员人人平等，在某种情况下会由于提议的冲突而产生一个“活锁”（所谓活锁我的理解是大家都没有死，都在动，但是一直解决不了冲突问题）。Paxos的作者Lamport在他的文章”The Part-Time Parliament“中阐述了这个问题并给出了解决方案——在所有议员中设立一个总统，只有总统有权发出提议，如果议员有自己的提议，必须发给总统并由总统来提出。好，我们又多了一个角色：总统。<br><br>总统——ZK Server Leader<br><br>又一个问题产生了，总统怎么选出来的？oh, my god! It’s a long story. 在淘宝核心系统团队的Blog上面有一篇文章是介绍如何选出总统的，有兴趣的可以去看看：<a rel="nofollow" href="http://rdc.taobao.com/blog/cs/?p=162" target="_blank">http://rdc.taobao.com/blog/cs/?p=162</a><br><br>现在我们假设总统已经选好了，下面看看ZK Server是怎么实施的。<br><br>情况一：<br><br>屁民甲(Client)到某个议员(ZK Server)那里询问(Get)某条法令的情况(ZNode的数据)，议员毫不犹豫的拿出他的记事本(local storage)，查阅法令并告诉他结果，同时声明：我的数据不一定是最新的。你想要最新的数据？没问题，等着，等我找总统Sync一下再告诉你。<br><br>情况二：<br><br>屁民乙(Client)到某个议员(ZK Server)那里要求政府归还欠他的一万元钱，议员让他在办公室等着，自己将问题反映给了总统，总统询问所有议员的意见，多数议员表示欠屁民的钱一定要还，于是总统发表声明，从国库中拿出一万元还债，国库总资产由100万变成99万。屁民乙拿到钱回去了(Client函数返回)。<br><br>情况三：<br><br>总统突然挂了，议员接二连三的发现联系不上总统，于是各自发表声明，推选新的总统，总统大选期间政府停业，拒绝屁民的请求。<br><br>呵呵，到此为止吧，当然还有很多其他的情况，但这些情况总是能在Paxos的算法中找到原型并加以解决。这也正是我们认为Paxos是Zookeeper的灵魂的原因。当然ZK Server还有很多属于自己特性的东西：Session, Watcher，Version等等等等，需要我们花更多的时间去研究和学习。</div>
+            
+    
+
+            <div id="link-report_note">
+            </div>
+            
+
+    </div>
+
+    
+
+    
+
+
+            
+    
+    <div id="sep"></div>
+    <div id="note_208430424_footer" class="note-ft">
+        
+        
+        <div class="note-footer-stat">
+          <div class="note-footer-stat-privacy">
+          </div>
+
+          <span class="note-footer-stat-del">
+          </span>
+        </div>
+
+        <div class="sns-bar">
+        
+            &nbsp;
+            <div class="footer-sharing">
+                <div class="sns-bar-fav ">
+                    
+    
+        <a class="fav-add btn-fav j a_show_login" title="标为喜欢？" href="https://www.douban.com/accounts/register?reason=like" data-tid="208430424" data-tkind="1015">喜欢</a>
+
+    
+
+    
+
+                </div>
+                
+    
+    
+    
+    <div class="sharing" data-target="{&quot;url&quot;: &quot;http://www.douban.com/note/208430424/&quot;, &quot;desc&quot;: &quot;\u539f\u8ba1\u5212\u5728\u4ecb\u7ecd\u5b8cZK Client\u4e4b\u540e\u5c31\u7740\u624bZK Server\u7684\u4ecb\u7ecd\uff0c\u4f46\u662f\u53d1\u73b0ZK Server\u6240\u5305\u542b\u7684\u5185\u5bb9\u5b9e\u5728\u592a\u591a\uff0c\u5e76\u4e0d\u662f\u7b80\u7b80\u5355\u5355\u4e00\u7bc7Blog\u5c31\u80fd\u641e\u5b9a\u7684\u3002\u4e8e\u662f\u51b3\u5b9a\u4ece\u57fa\u7840\u641e\u8d77\u6bd4\u8f83\u597d\u3002 \u90a3\u4e48ZK Server\u6700\u57fa\u7840\u7684\u4e1c\u897f\u662f...&quot;, &quot;pic&quot;: &quot;&quot;, &quot;title&quot;: &quot;Zookeeper\u5168\u89e3\u6790\u2014\u2014Paxos\u4f5c\u4e3a\u7075\u9b42&quot;}">
+        <div class="sharing-button">
+            <div class="sharing-douban">
+                
+
+    
+
+
+        <div class="rec-sec">
+
+    <span class="rec">
+        
+            <a data-user_id="0" href="https://www.douban.com/accounts/register?reason=collect" share-id="208430424" data-mode="plain" data-name="Zookeeper全解析——Paxos作为灵魂" data-type="com.douban.people" data-desc="原计划在介绍完ZK Client之后就着手ZK Server的介绍，但是发现ZK Server所包含的内容实在太多，并不是简简单单一篇Blog就能搞定的。于是决定从基础搞起比较好。 那么ZK Server最基础的东西是..." data-href="https://www.douban.com/note/208430424/" data-image="" data-properties="{&quot;href&quot;:&quot;http:\/\/www.douban.com\/people\/twogood\/&quot;,&quot;name&quot;:&quot;摩萨德&quot;,&quot;uid&quot;:&quot;3239388&quot;}" data-redir="https://www.douban.com/static/dshare_proxy.html" data-text="" data-apikey="" data-curl="" data-count="10" data-object_kind="1015" data-object_id="208430424" data-target_type="rec" data-target_action="0" data-action_props="{&quot;note_url&quot;:&quot;http:\/\/www.douban.com\/note\/208430424\/&quot;,&quot;note_title&quot;:&quot;Zookeeper全解析——Paxos作为灵魂&quot;,&quot;author_name&quot;:&quot;摩萨德&quot;}" data-btn_text="推荐" data-heading="推荐到豆瓣" data-sanity_key="_e6ecb" class="j a_show_login lnk-sharing lnk-douban-sharing">
+                    
+                            推荐 <span class="rec-num">2</span>
+                    
+            </a>
+    </span>
+            </div>
+
+            </div>
+            <span class="sharing-indicator"></span>
+        </div>
+
+            <div class="sharing-layer is-hidden">
+                <div class="sharing-wechat">
+                    <span class="sharing-icon__wechat">微信扫码</span>
+                    <div class="sharing-wechat-qrcode"></div>
+                </div>
+                
+                <ul class="sharing-list">
+                    <li class="sharing-icon__weibo" data-share="weibo">新浪微博</li>
+                    <li class="sharing-icon__qq" data-share="qq">QQ好友</li>
+                    <li class="sharing-icon__qzone" data-share="qzone">QQ空间</li>
+                </ul>
+            </div>
+            
+
+        
+    </div>
+
+            </div>
+            
+            
+        </div>
+    </div>
+
+            
+
+
+
+    
+
+    </div>
+    <div class="clear"></div>
+
+    <div class="tabs" id="reviews">
+      <a href="https://www.douban.com/note/208430424/#sep" class="on">回应</a>
+      <a href="https://www.douban.com/note/208430424/?type=rec#sep">推荐</a>
+      <a href="https://www.douban.com/note/208430424/?type=like#sep">喜欢</a>
+    </div>
+
+    <div class="">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="comments" class="">
+
+
+
+
+
+
+    
+
+<div class="comment-item" id="30906525" data-cid="30906525" data-target_id="208430424" data-target_kind="1015">
+    
+    <div class="pic">
+        <a href="https://www.douban.com/people/42700709/"><img width="48" height="48" class="" src="./Zookeeper全解析——Paxos作为灵魂_files/user_normal.jpg" alt="江南小鱼"></a>
+    </div>
+    <div class="content report-comment">
+        <div class="author">
+            <span class="">2012-10-31 17:09:02</span>
+            <a href="https://www.douban.com/people/42700709/" class="  ">江南小鱼</a> 
+        </div>
+
+
+        
+        <p class="">很幽默的解释，不过很通俗易懂，赞</p>
+
+        <div class="op-lnks">
+        
+
+        <a href="https://www.douban.com/note/208430424/?cid=30906525#add_comment" class="lnk-reply hidden">回应</a>
+
+        <a rel="nofollow" href="https://www.douban.com/note/208430424/remove_comment?start=0&amp;cid=30906525&amp;ck=None" class="j a_confirm_link lnk-delete lnk-delete-30906525 hidden" title="删除江南小鱼的留言?">删除</a>
+
+        <a rel="nofollow" href="https://www.douban.com/misc/remove_comment?kind=1015&amp;target_id=208430424&amp;start=0&amp;cid=30906525&amp;ck=None" class="j a_confirm_link lnk-admin-delete lnk-admin-delete-30906525 hidden" title="删除江南小鱼的留言?">删除</a>
+
+        </div>
+
+        <div class="group_banned">
+            <span class="gact hidden p_u42700709 p_admin p_intern fright">&gt;
+                <a rel="nofollow" href="https://www.douban.com/note/208430424/remove_comment?cid=30906525" class="j a_confirm_link" title="删除江南小鱼的发言?">删除</a>
+            </span>
+        </div>
+    </div>
+</div>
+
+
+
+    
+
+<div class="comment-item" id="31135547" data-cid="31135547" data-target_id="208430424" data-target_kind="1015">
+    
+    <div class="pic">
+        <a href="https://www.douban.com/people/faof/"><img width="48" height="48" class="" src="./Zookeeper全解析——Paxos作为灵魂_files/u1694610-17.jpg" alt="WindMonster"></a>
+    </div>
+    <div class="content report-comment">
+        <div class="author">
+            <span class="">2012-11-15 12:48:48</span>
+            <a href="https://www.douban.com/people/faof/" class="  ">WindMonster</a>  (出大量晚会面具)
+        </div>
+
+
+        
+        <p class="">转载都不注明出处。。。</p>
+
+        <div class="op-lnks">
+        
+
+        <a href="https://www.douban.com/note/208430424/?cid=31135547#add_comment" class="lnk-reply hidden">回应</a>
+
+        <a rel="nofollow" href="https://www.douban.com/note/208430424/remove_comment?start=0&amp;cid=31135547&amp;ck=None" class="j a_confirm_link lnk-delete lnk-delete-31135547 hidden" title="删除WindMonster的留言?">删除</a>
+
+        <a rel="nofollow" href="https://www.douban.com/misc/remove_comment?kind=1015&amp;target_id=208430424&amp;start=0&amp;cid=31135547&amp;ck=None" class="j a_confirm_link lnk-admin-delete lnk-admin-delete-31135547 hidden" title="删除WindMonster的留言?">删除</a>
+
+        </div>
+
+        <div class="group_banned">
+            <span class="gact hidden p_u1694610 p_admin p_intern fright">&gt;
+                <a rel="nofollow" href="https://www.douban.com/note/208430424/remove_comment?cid=31135547" class="j a_confirm_link" title="删除WindMonster的发言?">删除</a>
+            </span>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div id="last"></div>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+    <br><span class="pl2" align="right"><a class="j a_show_login" href="https://www.douban.com/accounts/register?reason=comment">&gt; 我来回应</a></span>
+
+
+ 
+
+ 
+
+    
+    
+    
+
+
+
+
+
+
+
+
+</div>
+
+
+<script>
+Do(function(){
+  $('#comments').find('.comment-item').hover(function(){$(this).addClass('over');}, function(){$(this).removeClass('over');});
+  $('.reply-quote .toggle-reply').click(function(e) {
+    e.preventDefault();
+    var el = $(this);
+    el.prevAll('span').toggle();
+    el.find('span').toggle();
+  });
+});
+</script>
+
+
+
+
+
+
+          
+
+
+
+
+  
+  
+  <script>
+    Do(function() {
+      var form = $('#add_comment form')
+      if (!form.length) {
+        return
+      }
+      var verifyTrigger = $('.js-verify-account')
+      if (!verifyTrigger.length) {
+        verifyTrigger = document.createElement('div')
+        verifyTrigger.setAttribute('class', 'js-verify-account')
+        verifyTrigger.setAttribute('data-is-verified', 'false')
+        verifyTrigger.setAttribute('data-verify-url', 'https://www.douban.com/accounts/phone/verify')
+        verifyTrigger.style.cssText = 'display: none'
+        document.body.appendChild(verifyTrigger)
+      }
+      function verify() {
+        $(verifyTrigger).trigger('click')
+        if (!$('.popup-container.hide').length) {
+          return false
+        }
+        return true
+      }
+      form.find('textarea').bind('focus', verify)
+    })
+  </script>
+
+    </div>
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+        </div>
+        <div class="aside">
+                
+    
+
+
+
+
+
+
+<div class="mod mod-usercard">
+  <div class="pic">
+      <a href="https://www.douban.com/people/twogood/"><img src="./Zookeeper全解析——Paxos作为灵魂_files/u3239388-10.jpg" alt="摩萨德" width="48" height="48"></a>
+  </div>
+  <div class="content">
+    <a href="https://www.douban.com/people/twogood/">摩萨德</a>
+        <span class="usercard-loc">(北京)</span>
+    <p>患得患失，有理想，迷茫，未知艺术家，小镇青年</p>
+    <div class="ft">
+    </div>
+  </div>
+</div>
+
+  
+
+
+
+
+
+
+    <div class="mod">
+        <div id="dale_personal_note_top_right" ad-status="appended" data-sell-type="CPC" data-type="YoudaoRender" data-version="3.0.27"><div style="position: relative; margin: 0px 0px 20px; display: block; width: 300px; height: 250px; overflow: hidden;"><iframe src="./Zookeeper全解析——Paxos作为灵魂_files/saved_resource.html" width="300" height="250" frameborder="0" scrolling="no" name="dale_personal_note_top_right_frame" id="dale_personal_note_top_right_frame" style="overflow: hidden; display: block;"></iframe><div style="line-height: 1; text-align: center; background-color: rgba(0, 0, 0, 0.3); font-size: 12px; position: absolute; right: 0px; bottom: 0px; padding: 4px; color: rgb(255, 255, 255);">广告</div></div></div>
+    </div>
+
+    
+    
+    
+        <div class="mod">
+            
+    <h2>
+        摩萨德的最新日记
+            &nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·
+            <span class="pl">&nbsp;(
+                
+                    <a href="https://www.douban.com/people/twogood/notes" target="_self">全部</a>
+                ) </span>
+    </h2>
+
+            <ul class="note-list">
+                  <li>
+                    <a title="设计模式-----单例模式" href="https://www.douban.com/note/230180935/">设计模式-----单例模式</a>
+                    
+                  </li>
+                  <li>
+                    <a title="设计模式总结" href="https://www.douban.com/note/209188341/">设计模式总结</a>
+                    
+                  </li>
+                  <li>
+                    <a title="如何编译安装MongoDB" href="https://www.douban.com/note/208797420/">如何编译安装MongoDB</a>
+                    
+                  </li>
+                  <li>
+                    <a title="HBase与BigTable的比较（翻译）" href="https://www.douban.com/note/208436197/">HBase与BigTable的比较（翻译）</a>
+                    
+                  </li>
+                  <li>
+                    <a title="HBase源码分析 – RPC机制:客户端" href="https://www.douban.com/note/208436001/">HBase源码分析 – RPC机制:客户端</a>
+                    
+                      <span>&nbsp;(3人喜欢)</span>
+                  </li>
+            </ul>
+        </div>
+
+
+
+    
+
+
+
+
+
+
+<div class="mod">
+    
+    <h2>
+        热门话题
+            &nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·
+            <span class="pl">&nbsp;(
+                
+                    <a href="https://www.douban.com/gallery/" target="_self">去话题广场</a>
+                ) </span>
+    </h2>
+
+
+    <ul>
+        
+            <li class="rec_topics">
+                    <a href="https://www.douban.com/gallery/topic/2776/?from=hot_topic_note" class="rec_topics_name">有哪些适合春节期间全家一起看的电影？</a>
+                    
+                    <span class="rec_topics_subtitle">15297人浏览</span>
+            </li>
+            <li class="rec_topics">
+                    <a href="https://www.douban.com/gallery/topic/78/?from=hot_topic_note" class="rec_topics_name">走亲访友异闻录</a>
+                    
+                    <span class="rec_topics_subtitle">189915人浏览</span>
+            </li>
+            <li class="rec_topics">
+                    <a href="https://www.douban.com/gallery/topic/2821/?from=hot_topic_note" class="rec_topics_name">我家的过年习俗</a>
+                    
+                    <span class="rec_topics_subtitle">11255人浏览</span>
+            </li>
+            <li class="rec_topics">
+                    <a href="https://www.douban.com/gallery/topic/2778/?from=hot_topic_note" class="rec_topics_name">舌尖上的春节</a>
+                    
+                    <span class="rec_topics_subtitle">53952人浏览</span>
+            </li>
+            <li class="rec_topics">
+                    <a href="https://www.douban.com/gallery/topic/74/?from=hot_topic_note" class="rec_topics_name">春节自救指南</a>
+                    
+                    <span class="rec_topics_subtitle">160953人浏览</span>
+            </li>
+            <li class="rec_topics">
+                    <a href="https://www.douban.com/gallery/topic/823/?from=hot_topic_note" class="rec_topics_name">我和豆友结婚了</a>
+                    
+                    <span class="rec_topics_subtitle">402042人浏览</span>
+            </li>
+    </ul>
+</div>
+
+    <!-- douban ad begin -->
+    <div id="dale_personal_note_middle_right" style="margin-bottom: 20px;" ad-status="loaded" data-sell-type="CPC" data-type="YoudaoRender" data-version="3.0.27"></div>
+    <!-- douban ad end -->
+
+<div class="mod">
+    
+    <div class="hd">
+        
+    <h2>
+        推荐这篇日记的豆列
+            &nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·&nbsp;·
+            <span class="pl">&nbsp;(
+                
+                    <a href="https://www.douban.com/note/208430424/doulists" target="_self">全部</a>
+                ) </span>
+    </h2>
+
+    </div>
+    <div class="indent">
+        <ul class="bs">
+            <li><a href="https://www.douban.com/doulist/3535201/">hadoop技术</a>
+            </li>
+            <li><a href="https://www.douban.com/doulist/3680359/">文章.技术</a>
+            </li>
+            <li><a href="https://www.douban.com/doulist/44027236/">no_1</a>
+            </li>
+            <li><a href="https://www.douban.com/doulist/44057224/">分布式</a>
+            </li>
+            <li><a href="https://www.douban.com/doulist/44614732/">分布式开发</a>
+            </li>
+        </ul>
+    </div>
+
+</div>
+
+    <!-- douban app begin -->
+    <div id="dale_personal_note_inner_bottom" ad-status="appended" data-sell-type="COMPLEMENT" data-type="DoubanRender" data-version="3.0.27"><div style="position: relative; margin: 0px 0px 20px; display: block; width: 300px; height: 100px; overflow: hidden;"><iframe src="./Zookeeper全解析——Paxos作为灵魂_files/saved_resource(1).html" width="300" height="100" frameborder="0" scrolling="no" name="dale_personal_note_inner_bottom_frame" id="dale_personal_note_inner_bottom_frame" style="overflow: hidden; display: block;"></iframe><div style="line-height: 1; text-align: center; background-color: rgba(0, 0, 0, 0.3); font-size: 12px; position: absolute; right: 0px; bottom: 0px; padding: 4px; color: rgb(255, 255, 255);">广告</div></div></div>
+    <div id="dale_personal_note_download_bottom" ad-status="loaded"></div>
+    <!-- douban app end -->
+
+        </div>
+        <div class="extra">
+            
+    
+<!-- douban ad begin -->
+<div id="dale_personal_note_bottom_super_banner" ad-status="loaded" data-sell-type="CPC" data-type="YoudaoRender" data-version="3.0.27"></div>
+<script type="text/javascript">
+    (function (global) {
+        var body = global.document.body,
+            html = global.document.documentElement;
+
+        var height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+        if (height >= 1000) {
+            (global.DoubanAdSlots = global.DoubanAdSlots || []).push('dale_personal_note_bottom_super_banner');
+        }
+    })(this);
+</script>
+<!-- douban ad end -->
+
+
+        </div>
+    </div>
+</div>
+
+        
+<div id="footer">
+    
+<span id="icp" class="fleft gray-link">
+    © 2005－2018 douban.com, all rights reserved 北京豆网科技有限公司
+</span>
+
+<a href="https://www.douban.com/hnypt/variformcyst.py" style="display: none;"></a>
+
+<span class="fright">
+    <a href="https://www.douban.com/about">关于豆瓣</a>
+    · <a href="https://www.douban.com/jobs">在豆瓣工作</a>
+    · <a href="https://www.douban.com/about?topic=contactus">联系我们</a>
+    · <a href="https://www.douban.com/about?policy=disclaimer">免责声明</a>
+    
+    · <a href="https://help.douban.com/?app=main" target="_blank">帮助中心</a>
+    · <a href="https://www.douban.com/doubanapp/">移动应用</a>
+    · <a href="https://www.douban.com/partner/">豆瓣广告</a>
+</span>
+
+</div>
+
+    </div>
+    
+    
+
+    <script type="text/javascript" src="./Zookeeper全解析——Paxos作为灵魂_files/6a22f6693603928c.js.下载"></script><div class="ui-overlay-mask" style="display: none;"><div class="ui-overlay-x"></div>                   <div class="ui-overlay-container">                   <a href="https://www.douban.com/note/208430424/#" class="ui-overlay-close" style="">×</a>   <div class="hd"></div>                     <div class="bd"><iframe src="./Zookeeper全解析——Paxos作为灵魂_files/login.html" frameborder="0" scrolling="no" width="478" height="480" name="https://www.douban.com" style="height: 480px;"></iframe></div>                   </div>                                     </div><script type="text/javascript">
+        var douban_src = '//' + 'www.douban.com';
+        var fav_type = 'fav_note';
+        var fav_url = 'https://www.douban.com/note/208430424/?type=like#sep';
+        window.fav_title = '标为喜欢？';
+    </script><script type="text/javascript" src="./Zookeeper全解析——Paxos作为灵魂_files/77a54ec5aa6d0ca8.js.下载"></script>
+    
+    <script src="./Zookeeper全解析——Paxos作为灵魂_files/copy.js.下载" type="text/javascript"></script>
+    
+
+
+
+
+    
+<script type="text/javascript">
+    (function (global) {
+        var newNode = global.document.createElement('script'),
+            existingNode = global.document.getElementsByTagName('script')[0],
+            adSource = '//erebor.douban.com/',
+            userId = '',
+            browserId = 'j99uRLzu834',
+            criteria = '3:/note/208430424/',
+            preview = '',
+            debug = false,
+            adSlots = ['dale_personal_note_middle_right', 'dale_personal_note_inner_bottom', 'dale_personal_note_download_bottom', 'dale_personal_note_top_right'];
+
+        global.DoubanAdRequest = {src: adSource, uid: userId, bid: browserId, crtr: criteria, prv: preview, debug: debug};
+        global.DoubanAdSlots = (global.DoubanAdSlots || []).concat(adSlots);
+
+        newNode.setAttribute('type', 'text/javascript');
+        newNode.setAttribute('src', 'https://img3.doubanio.com/f/adjs/d59867ddbe8a25645584b467a58a41cbd672c9be/ad.release.js');
+        newNode.setAttribute('async', true);
+        existingNode.parentNode.insertBefore(newNode, existingNode);
+    })(this);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+<!-- Google Tag Manager -->
+<noscript>&lt;iframe src="//www.googletagmanager.com/ns.html?id=GTM-5WP579" height="0" width="0" style="display:none;visibility:hidden"&gt;&lt;/iframe&gt;</noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-5WP579');</script>
+<!-- End Google Tag Manager -->
+
+
+<script type="text/javascript">
+var _paq = _paq || [];
+_paq.push(['trackPageView']);
+_paq.push(['enableLinkTracking']);
+(function() {
+    var p=(('https:' == document.location.protocol) ? 'https' : 'http'), u=p+'://fundin.douban.com/';
+    _paq.push(['setTrackerUrl', u+'piwik']);
+    _paq.push(['setSiteId', '100001']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript';
+    g.defer=true;
+    g.async=true;
+    g.src=p+'://img3.doubanio.com/dae/fundin/piwik.js';
+    s.parentNode.insertBefore(g,s);
+})();
+</script>
+
+<script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-7019765-1']);
+_gaq.push(['_setCampNameKey', 'dcn']);
+_gaq.push(['_setCampSourceKey', 'dcs']);
+_gaq.push(['_setCampMediumKey', 'dcm']);
+_gaq.push(['_setCampTermKey', 'dct']);
+_gaq.push(['_setCampContentKey', 'dcc']);
+_gaq.push(['_addOrganic', 'baidu', 'word']);
+_gaq.push(['_addOrganic', 'soso', 'w']);
+_gaq.push(['_addOrganic', '3721', 'name']);
+_gaq.push(['_addOrganic', 'youdao', 'q']);
+_gaq.push(['_addOrganic', 'so.360.cn', 'q']);
+_gaq.push(['_addOrganic', 'vnet', 'kw']);
+_gaq.push(['_addOrganic', 'sogou', 'query']);
+_gaq.push(['_addIgnoredOrganic', '豆瓣']);
+_gaq.push(['_addIgnoredOrganic', 'douban']);
+_gaq.push(['_addIgnoredOrganic', '豆瓣网']);
+_gaq.push(['_addIgnoredOrganic', 'www.douban.com']);
+_gaq.push(['_setDomainName', '.douban.com']);
+
+
+    _gaq.push(['_setCustomVar', 1, 'responsive_view_mode', 'desktop', 3]);
+
+_gaq.push(['_trackPageview']);
+_gaq.push(['_trackPageLoadTime']);
+
+window._ga_init = function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+};
+if (window.addEventListener) {
+    window.addEventListener('load', _ga_init, false);
+} else {
+    window.attachEvent('onload', _ga_init);
+}
+</script>
+
+
+
+
+
+    <!-- daisy7a-docker-->
+
+  
+
+  <script>_SPLITTEST=''</script>
+
+
+
+
+
+<div class="dou-preview-image-popup" style="display: none;"></div><a href="https://www.douban.com/note/208430424/#" class="dou-preview-image-link-open" target="_preview_img" style="display: none;"></a></body></html>

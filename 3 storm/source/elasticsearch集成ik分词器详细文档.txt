@@ -1,0 +1,19 @@
+
+1.关闭es集群
+
+2.共享模式sxt用户plugins下创建ik目录
+
+3.ftp上传1个节点ik分词器到software目录下（便于拷贝）
+
+4.plugins下sxt用户同步创建 ik目录
+
+3.拷贝ik压缩包到software目录下，使用sxt用户解压 unzip -d （或者root用户拷贝压缩包到ik目录下，使用sxt解压）
+
+4.修改ik的 vi plugin-descriptor.properties 配置文件，版本变为2.2.1 （/xxx 搜索）
+# plugins with the incorrect elasticsearch.version.
+elasticsearch.version=2.2.1
+
+5.将 ik分发给别的节点：scp -r ik/ sxt@node07:`pwd`
+
+6.重启动集群
+

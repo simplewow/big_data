@@ -125,7 +125,7 @@ mysql—show databases—-use mysql—show tabeles—desc user;
 grant all privileges on *.* to 'root'@'%' identified by '123456' with grant option;
 	#*.*所有库和信息，，%所有地址
 	#不能update(因为后面加密了,直接改不知道改成啥):要通过命令授权
-
+mysql -u -p
 然后删除其他：delete from user where host!='%';（因为%包含了）
 接下来要重启服务。（重启服务或者flush privileges）,
 
@@ -140,8 +140,8 @@ grant all privileges on *.* to 'root'@'%' identified by '123456' with grant opti
 1)准备工作：
 启动集群：zk,  在n3或4（如果是免秘钥了）启动all，就可以少一个 rm
 	补充：哪个没起来就单独去
-	hadoop-daemon.sh start nn dn jn dm
-	yarn-daemon.sh start  rm 
+	hadoop-daemon.sh start nn dn jn 
+	yarn-daemon.sh start  rm   nm
 
 传进两个文件（hive 和 jdbc）
 tar -zxvf hive.tar.gz -C /opt/sxt/
@@ -266,7 +266,7 @@ hive --service metastore
 2）启动hive   C n4
 
 
-如果出现4 hive一直卡住，去看3有没有启动，3没有启动看看1mysql有没有启动
+如果出现4 hive一直卡住，去看3有没有启动，3没有启动看看1 mysql有没有启动  (要启动rm)
 
 #node2，区别node4
 	hive启动，，读取配置site文件，，
@@ -371,6 +371,7 @@ private static String driverName = "org.apache.hive.jdbc.HiveDriver";
 
 ```
 #3，运行方式
+
 命令行方式cli：控制台模式
 脚本运行方式（实际生产环境中用最多）
 JDBC方式：hiveserver2  
@@ -618,6 +619,20 @@ show grant role tets on table psn0;
 关于你如何设置权限的：
 
 [Privileges Required for Hive Operations]: \2hadoop\source\option
+
+
+
+## 2.5 日志
+
+https://www.cnblogs.com/kouryoushine/p/7805657.html
+
+```
+/tmp/<user.name>文件夹的hive.log文件中，全路径就是/tmp/当前用户名/hive.log。
+
+在默认的日志级别情况下，是不能将DEBUG信息输出，但可以通过以下两种方式修改log4j输出的日志级别，从而利用这些调试日志进行错误定位，具体做法如下
+hiveconf hive.root.logger=DEBUG,console  set/或者hive
+或者配置文件
+```
 
 
 
@@ -1699,7 +1714,7 @@ Explain 显示执行计划  （ANTLR那个）
 	where仅对本表字段做条件过滤
 
 Hive抓取策略：
-	Hive中对某些情况的查询不需要使用MapReduce计算
+	Hive中对某些情况的查询不需要使用MapReduce计算，然后选择使用不使用
 
 抓取策略 
 	Set hive.fetch.task.conversion=none/more; （不需要就more，默认也是more）
@@ -1829,7 +1844,7 @@ set hive.auto.convert.join = true;
 ```
 #1，Map-Side聚合
 
-#过设置以下参数开启在Map端的聚合 （使用前，你要考虑你是否需要聚合：如果聚合后，根本没压缩多少，还不如压缩了呢）
+#过设置以下参数开启在Map端的聚合 （使用前，你要考虑你是否需要聚合：如果聚合后，根本没压缩多少，还不如不压缩了呢）
 set hive.map.aggr=true;
 
 相关配置参数：就1,2 5 尤其5
