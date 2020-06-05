@@ -1,0 +1,53 @@
+疑问：
+1，文件--文件拷贝
+F流 再接  数组流为啥？，问啥不直接F流对接拷贝
+
+3.ObjectInputStream()   
+
+不带参数的构造方法意义：？？？？？
+为完全重新实现ObjectInputStream的子类提供一种方法，
+不必分配刚刚被ObjectInputStream实现使用的私有数据。
+
+
+4，RandomAccessFile
+mode: "r" ，"rw"，"rws"，或 "rwd"  分别作用
+
+5.Thread.State  值，Blocked 和 WAITING  和TIMED_WAITING到底是啥
+
+6.ThreadLocal  具体原理，和应用
+
+7，CAS具体原理。
+
+8， DOM 解析
+9，正则\\? 两个的作用。
+
+10，编码解码具体问题：
+自己猜想：文件都是字节的，，当读取时候，还是字节不会出错。
+若是想要变成字符串，就需要字典。这时候给不同字典，就需要不同的长度，不一定能显示正确
+（同时，可能换字符串的时候，会被永久损失）
+那么getBytes() 和java.net.URLDecoder.decode(requestInfo,"utf-8");（后者有用，又为什么）
+
+11，
+三个黑科技？
+ava.net.URLDecoder.decode(requestInfo,"utf-8")
+kv =Arrays.copyOf(kv, 2);（让数组变成长度为2，没有补）
+values.toArray(new String[0])   （list 变数组，同时规定了返回String）
+	#但是 String [] XX  又报错？？？ 
+
+12，
+根据获得的表名、字段的信息，拼出DDL语句，
+然后，使用JDBC执行这个SQL，在数据库中生成相关的表  ？？？如何操作
+
+13，ClassLoader的 方法使用？？
+
+14， 自定义类加载器  14.3里面
+只能实现，一层目录下的.class文件，调用，不然报错原因？？
+
+-----------------
+2.try - catch -resouce（好了）
+要声明赋值都在里面（满足这个点就行）
+ 
+6synchronized .静态方法：锁模子，Class 锁的到底干啥 （好了，个人理解）
+
+反正用在静态方法的时候，保证调用该静态方法的时候，
+接下来的锁块，只有一个运行

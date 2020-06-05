@@ -647,8 +647,10 @@ tar xf zookeeper-3.4.6.tar.gz -C /opt/sxt/
 4）进入软件conf目录，改名zoo_sample.cfg zoo.cfg
 mv  zoo_sample.cfg zoo.cfg
 
-并配置 dataDir
-/var/sxt/zk   （一会先创建）
+配置内：
+
+并配置 dataDir  
+/var/sxt/zk   （-p 一会先创建）
 #原来是临时目录会删除
 
 最后加集群节点。(ZK也是主从,,大号先)
@@ -1070,14 +1072,14 @@ MRAppMaster（AM）容错
 2，配置：
 1）mapred-site.xml
 ==============================
-#yarn
+#yarn  
 <property>
         <name>mapreduce.framework.name</name>
         <value>yarn</value>
 </property>
 
 
-2）yarn-site.xml:
+2）yarn-site.xml: （在伪分布，已经帮忙设置yarn-evn  jdk）
 =================================
 #洗也归yarn
 <property>
@@ -1421,7 +1423,7 @@ M T: 没有main 方法，通过反射来创建对象.（M T 在hadoop jar包中�
 ```
 #2，缓冲区事情：（#在3.X mapBuffer  用C写了。快）
 1）溢写器（缓存区，写了，多少开始溢写，，和下面的百分比。自定义或默认0.8）
-2）缓存区大小： 自定义或者默认100MB
+2）缓存区大小： 自定义或者默认100MB  （这是对的）
 3）排序器：要不默认，要不自己定义类（要实现接口）
 4）比较器：自定义（序列化 （在hadoop是 Writable）和 比较接口）或者默认  （KV都是非基本，要序列化）
 5）combiner: 压缩。可以当成map的reduce 可以使用，也可以不用。

@@ -255,7 +255,7 @@ store包括位于内存中的memstore和位于磁盘的storefile
 ```
 #1,搭建
 1） hbase上传解压
-0.98 hbase 和 protobuf先上传
+0.98 hbase  （bin的包）和 protobuf先上传
 tar -zxvf -C /opt/sxt/ （自己有一层目录）
 删掉docs目录下内容，，（否则后面传给别的节点慢）
 
@@ -273,7 +273,7 @@ site的
 </property> 
 <property>     
  	<name>hbase.zookeeper.property.dataDir</name>
-	<value>/var/sxt/test-hbase/zookeeper</value>               
+	<value>/var/sxt/test-hbase/zookeeper</value>             
 </property> 
 ```
 

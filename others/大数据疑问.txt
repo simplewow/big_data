@@ -1,0 +1,44 @@
+1，job缓存机制  addfilecache  bug???
+
+2，？？redis帮助图完善
+
+删除过期key的作用？？
+
+集群  keys  *  只访问了本节点的所有key ？？？如何所有的  
+
+
+
+
+那三个过滤器 ： 前缀，多列，单列条件。  （~）
+
+
+
+---
+
+nginx???
+单例？？
+
+哪些需要mysql服务？？  目前hive  和 cdh   现在sqoop （~）
+
+
+
+？？为什么要用re  的 v输出  用map 封数据
+
+
+
+
+hadoop 和spark 思想    （~）
+1+1 = 2 2+1 =3 
+1+1+1=3
+
+？？？无敌： hive 使用UDF报错，，项目那里
+
+
+---
+日志：
+CDH： 在小cm/log下 （有Server 和 Agent）  tail -f cloudera-scm-server/cloudera-scm-server.log
+ooize  :  通过 web控制台，然后跳转到，MR, 看日志   （问题是web 的刷不出来？？？）
+
+
+但是怎么操作drpc，，多种任务？？
+（是一个任务中用方法加多种服务，，还是创建多个任务完成多种服务？？）
